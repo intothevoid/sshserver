@@ -5,10 +5,6 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sshserver", "sshserver.csproj", "{3BE81994-C03C-4A9C-9E23-EF7BE4B9CA92}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{57FA6897-B92C-444B-B67F-C8383272DDC3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sshservertest", "test\sshservertest\sshservertest.csproj", "{690DE90B-3F91-4379-B64F-5907C6130300}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,20 +30,5 @@ Global
 		{3BE81994-C03C-4A9C-9E23-EF7BE4B9CA92}.Release|x64.Build.0 = Release|x64
 		{3BE81994-C03C-4A9C-9E23-EF7BE4B9CA92}.Release|x86.ActiveCfg = Release|x86
 		{3BE81994-C03C-4A9C-9E23-EF7BE4B9CA92}.Release|x86.Build.0 = Release|x86
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Debug|x64.ActiveCfg = Debug|x64
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Debug|x64.Build.0 = Debug|x64
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Debug|x86.ActiveCfg = Debug|x86
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Debug|x86.Build.0 = Debug|x86
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Release|Any CPU.Build.0 = Release|Any CPU
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Release|x64.ActiveCfg = Release|x64
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Release|x64.Build.0 = Release|x64
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Release|x86.ActiveCfg = Release|x86
-		{690DE90B-3F91-4379-B64F-5907C6130300}.Release|x86.Build.0 = Release|x86
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{690DE90B-3F91-4379-B64F-5907C6130300} = {57FA6897-B92C-444B-B67F-C8383272DDC3}
 	EndGlobalSection
 EndGlobal
