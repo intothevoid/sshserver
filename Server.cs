@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace sshserver
 {
@@ -16,6 +17,7 @@ namespace sshserver
         private const int DefaultPort = 22;
         private const int ConectionBacklog = 64;
         private TcpListener _Listener;
+        private List<Client> _Clients = new List<Client>();
 
         public Server()
         {
@@ -45,15 +47,19 @@ namespace sshserver
 
         public void Stop()
         {
-            _Logger.LogInformation("Shutting down...");
-            
             if (_Listener != null)
             {
+                _Logger.LogInformation("Shutting down...");
+                
                 _Listener.Stop();
                 _Listener = null;
+
+                // Disconnect each client and clear list
+                _Clients.ForEach(c => c.Disconnect());
+                _Clients.Clear();
+                
+                _Logger.LogInformation("Shutting down...");
             }
-            
-            _Logger.LogInformation("Shutting down...");
         }
 
         public void Poll()
@@ -67,12 +73,15 @@ namespace sshserver
                 Socket socket = acceptTask.Result;
                 _Logger.LogDebug($"New Client: {socket.RemoteEndPoint}");
 
-                // TODO Accept and maintain client list
+                _Clients.Add(new Client(socket, _LoggerFactory.CreateLogger(socket.RemoteEndPoint.ToString())));
 
             }
 
-            // TODO Poll each client for activity
-            // TODO Remove all disconnected clients
+            // Poll each client
+            _Clients.ForEach(c => c.Poll());
+
+            // Remove all disconnected clients
+            _Clients.RemoveAll(c => c.IsConnected() == false);
         }
     }
 }

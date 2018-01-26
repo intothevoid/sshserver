@@ -4,7 +4,7 @@ namespace sshserver
 {
     class Program
     {
-        private static bool s_IsRunning = false;
+        private static bool s_IsRunning = true;
         static void Main(string[] args)
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
