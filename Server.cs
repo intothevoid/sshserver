@@ -1,3 +1,8 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+
 namespace sshserver
 {
     public class Server
@@ -11,7 +16,7 @@ namespace sshserver
             _configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("sshserver.json", optional:false)
-                .Build()
+                .Build();
 
             _loggerFactory = new LoggerFactory();
             _loggerFactory.AddConsole(_configuration.GetSection("Logging"));
