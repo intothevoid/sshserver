@@ -9,6 +9,10 @@ using System.Collections.Generic;
 
 namespace sshserver
 {
+    public static class ServerConstants
+    {
+        public const string ProtocolVersionExchange = "SSh-2.0-ksshserver";
+    }
     public class Server
     {
         private IConfigurationRoot _Configuration;
