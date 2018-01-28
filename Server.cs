@@ -11,7 +11,7 @@ namespace sshserver
 {
     public static class ServerConstants
     {
-        public const string ProtocolVersionExchange = "SSh-2.0-ksshserver";
+        public const string ProtocolVersionExchange = "SSH-2.0-ksshserver";
     }
     public class Server
     {

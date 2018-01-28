@@ -42,7 +42,7 @@ namespace sshserver
 
         public bool IsConnected()
         {
-            return (_Socket == null);
+            return (_Socket != null);
         }
 
         public void Poll()
