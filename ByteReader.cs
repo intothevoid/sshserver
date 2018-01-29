@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace sshserver
+namespace ksshserver
 {
     public class ByteReader : IDisposable
     {

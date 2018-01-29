@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace sshserver
+namespace ksshserver
 {
    public class Client
     {
