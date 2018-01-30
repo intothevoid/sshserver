@@ -91,7 +91,7 @@ namespace ksshserver
             return (GetByte() != 0);
         }
 
-        private int GetByte()
+        public byte GetByte()
         {
             if(disposedValue)
             throw new ObjectDisposedException("ByteReader");

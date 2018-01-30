@@ -82,7 +82,23 @@ namespace ksshserver
 
                 if (_ProtocolVersionExchangeComplete)
                 {
-                   // TODO Read and process packets 
+                   try
+                   {
+                       Packet packet = Packet.ReadPacket(_Socket);
+
+                       while (packet != null)
+                       {
+                           // TODO handle specific packets
+
+                           packet = Packet.ReadPacket(_Socket);
+                       }
+                   }
+                   catch (System.Exception ex)
+                   {
+                       _Logger.LogError(ex.Message);
+                       Disconnect();
+                       return;
+                   } 
                 }
             }
         }
