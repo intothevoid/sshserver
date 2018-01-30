@@ -19,20 +19,20 @@ byte[m]   mac (Message Authentication Code - MAC); m = mac_length
 
 Key Exchange Packet Format (From SSH RFC)
 
-byte         SSH_MSG_KEXINIT 
-byte[16]     cookie (random bytes) 
-name-list    kex_algorithms 
-name-list    server_host_key_algorithms 
-name-list    encryption_algorithms_client_to_server 
-name-list    encryption_algorithms_server_to_client 
-name-list    mac_algorithms_client_to_server 
-name-list    mac_algorithms_server_to_client 
-name-list    compression_algorithms_client_to_server 
-name-list    compression_algorithms_server_to_client 
-name-list    languages_client_to_server 
-name-list    languages_server_to_client 
-boolean      first_kex_packet_follows 
-uint32       0 (reserved for future extension) 
+byte         SSH_MSG_KEXINIT   
+byte[16]     cookie (random bytes)  
+name-list    kex_algorithms  
+name-list    server_host_key_algorithms  
+name-list    encryption_algorithms_client_to_server  
+name-list    encryption_algorithms_server_to_client   
+name-list    mac_algorithms_client_to_server   
+name-list    mac_algorithms_server_to_client  
+name-list    compression_algorithms_client_to_server   
+name-list    compression_algorithms_server_to_client  
+name-list    languages_client_to_server   
+name-list    languages_server_to_client  
+boolean      first_kex_packet_follows  
+uint32       0 (reserved for future extension)  
     
 -----------------------------------------------------------
 
