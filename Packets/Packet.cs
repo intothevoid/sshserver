@@ -8,7 +8,7 @@ namespace KSSHServer.Packets
     {
         public const int MaxPacketSize = 35000;
         private static int _PacketHeaderSize = 5;
-
+        public abstract PacketType PacketType { get; }
 
         public static Packet ReadPacket(Socket socket)
         {
