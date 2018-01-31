@@ -4,26 +4,40 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using KSSHServer.Packets;
 using Microsoft.Extensions.Logging;
 
 namespace KSSHServer
 {
-   public class Client
+    public class Client
     {
         private ILogger _Logger;
         private Socket _Socket;
         private bool _ProtocolVersionExchangeComplete = false;
         private string _ProtocolVersionExchange;
+        private Packets.KexInit _KexInitServerToClient = new Packets.KexInit();
 
         public Client(Socket socket, ILogger logger)
         {
             _Socket = socket;
             _Logger = logger;
 
+            // TODO Add supported algorithms to _KexInitServerToClient
+            const int socketBufferSize = 2 * Packets.Packet.MaxPacketSize;
+            _Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, socketBufferSize);
+            _Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, socketBufferSize);
             _Socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
             _Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
 
             Send($"{ServerConstants.ProtocolVersionExchange}\r\n");
+
+            // 7.1.  Algorithm Negotiation - https://tools.ietf.org/html/rfc4253#section-7.1
+            Send(_KexInitServerToClient);
+        }
+
+        private void Send(Packet packet)
+        {
+            Send(packet.ToByteArray());
         }
 
         private void Send(string message)
@@ -34,9 +48,9 @@ namespace KSSHServer
 
         private void Send(byte[] message)
         {
-            if(!IsConnected())
+            if (!IsConnected())
                 return;
-            
+
             _Socket.Send(message);
         }
 
@@ -47,22 +61,22 @@ namespace KSSHServer
 
         public void Poll()
         {
-            if(!IsConnected())
+            if (!IsConnected())
                 return;
-            
+
             bool dataAvailable = _Socket.Poll(0, SelectMode.SelectRead);
 
-            if(dataAvailable)
+            if (dataAvailable)
             {
                 int read = _Socket.Available;
 
-                if(read < 1)
+                if (read < 1)
                 {
                     Disconnect();
                     return;
                 }
 
-                if(!_ProtocolVersionExchangeComplete)
+                if (!_ProtocolVersionExchangeComplete)
                 {
                     try
                     {
@@ -70,7 +84,7 @@ namespace KSSHServer
 
                         if (_ProtocolVersionExchangeComplete)
                         {
-                           _Logger.LogDebug($"Received ProtocolVersionExchange:{_ProtocolVersionExchange}"); 
+                            _Logger.LogDebug($"Received ProtocolVersionExchange:{_ProtocolVersionExchange}");
                         }
                     }
                     catch (System.Exception)
@@ -82,23 +96,24 @@ namespace KSSHServer
 
                 if (_ProtocolVersionExchangeComplete)
                 {
-                   try
-                   {
-                       Packets.Packet packet = Packets.Packet.ReadPacket(_Socket);
+                    try
+                    {
+                        Packets.Packet packet = Packets.Packet.ReadPacket(_Socket);
 
-                       while (packet != null)
-                       {
-                           // TODO handle specific packets
+                        while (packet != null)
+                        {
+                            // TODO handle specific packets
 
-                           packet = Packets.Packet.ReadPacket(_Socket);
-                       }
-                   }
-                   catch (System.Exception ex)
-                   {
-                       _Logger.LogError(ex.Message);
-                       Disconnect();
-                       return;
-                   } 
+                            packet = Packets.Packet.ReadPacket(_Socket);
+                            _Logger.LogDebug($"Received Packet: {packet.PacketType}");
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        _Logger.LogError(ex.Message);
+                        Disconnect();
+                        return;
+                    }
                 }
             }
         }
@@ -114,9 +129,9 @@ namespace KSSHServer
             bool foundCR = false;
             int val = stream.ReadByte();
 
-            while(val != -1)
+            while (val != -1)
             {
-                if(foundCR && (val == '\n'))
+                if (foundCR && (val == '\n'))
                 {
                     result = Encoding.UTF8.GetString(data.ToArray());
                     _ProtocolVersionExchangeComplete = true;
@@ -125,7 +140,7 @@ namespace KSSHServer
 
                 if (val == '\r')
                 {
-                   foundCR = true; 
+                    foundCR = true;
                 }
                 else
                 {

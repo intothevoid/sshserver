@@ -17,7 +17,7 @@ namespace KSSHServer
             WriteByte((byte)packetType);
         }
 
-        private void WriteByte(byte value)
+        public void WriteByte(byte value)
         {
             if (disposedValue)
                 throw new ObjectDisposedException("ByteWriter");
@@ -78,7 +78,7 @@ namespace KSSHServer
             WriteRawBytes(value);
         }
 
-        private void WriteRawBytes(byte[] value)
+        public void WriteRawBytes(byte[] value)
         {
             if (disposedValue)
                 throw new ObjectDisposedException("ByteWriter");
@@ -86,7 +86,7 @@ namespace KSSHServer
             _Stream.Write(value, 0, value.Count());
         }
 
-        private byte[] ToByteArray()
+        public byte[] ToByteArray()
         {
             if (disposedValue)
                 throw new ObjectDisposedException("ByteWriter");
