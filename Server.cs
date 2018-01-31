@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-namespace ksshserver
+namespace KSSHServer
 {
     public static class ServerConstants
     {

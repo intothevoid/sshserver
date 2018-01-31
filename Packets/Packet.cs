@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Net.Sockets;
 
-namespace ksshserver
+namespace KSSHServer.Packets
 {
     public abstract class Packet
     {

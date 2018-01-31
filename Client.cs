@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace ksshserver
+namespace KSSHServer
 {
    public class Client
     {
@@ -84,13 +84,13 @@ namespace ksshserver
                 {
                    try
                    {
-                       Packet packet = Packet.ReadPacket(_Socket);
+                       Packets.Packet packet = Packets.Packet.ReadPacket(_Socket);
 
                        while (packet != null)
                        {
                            // TODO handle specific packets
 
-                           packet = Packet.ReadPacket(_Socket);
+                           packet = Packets.Packet.ReadPacket(_Socket);
                        }
                    }
                    catch (System.Exception ex)

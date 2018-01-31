@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ksshserver
+namespace KSSHServer
 {
     class Program
     {
