@@ -42,3 +42,6 @@ Changelog
 
 0.3
 - Read protocol exchange string from client
+
+0.4
+- Read key exchange packet (*broken) 
