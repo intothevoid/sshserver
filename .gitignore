@@ -1,0 +1,15 @@
+obj/Debug/netcoreapp2.0/sshserver.csproj.FileListAbsolute.txt
+bin/Debug/netcoreapp2.0/sshserver.dll
+bin/Debug/netcoreapp2.0/sshserver.pdb
+bin/Debug/netcoreapp2.0/sshserver.deps.json
+bin/Debug/netcoreapp2.0/sshserver.runtimeconfig.json
+bin/Debug/netcoreapp2.0/sshserver.runtimeconfig.dev.json
+obj/project.assets.json
+obj/sshserver.csproj.nuget.cache
+obj/Debug/netcoreapp2.0/sshserver.dll
+obj/Debug/netcoreapp2.0/sshserver.pdb
+obj/Debug/netcoreapp2.0/sshserver.AssemblyInfo.cs
+obj/Debug/netcoreapp2.0/sshserver.AssemblyInfoInputs.cache
+obj/Debug/netcoreapp2.0/sshserver.csproj.CoreCompileInputs.cache
+obj/project.assets.json
+obj/sshserver.csproj.nuget.cache
