@@ -103,9 +103,10 @@ namespace KSSHServer
                         while (packet != null)
                         {
                             // TODO handle specific packets
-
-                            packet = Packets.Packet.ReadPacket(_Socket);
                             _Logger.LogDebug($"Received Packet: {packet.PacketType}");
+
+                            // Read next packet
+                            packet = Packets.Packet.ReadPacket(_Socket);
                         }
                     }
                     catch (System.Exception ex)

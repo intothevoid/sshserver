@@ -25,7 +25,10 @@ namespace KSSHServer.Packets
                 Packet packetInstance = Activator.CreateInstance(packet) as Packet;
                 _PacketTypes[packetInstance.PacketType] = packet;
                 }
-                catch { }
+                catch(Exception e) 
+                { 
+                    string error = e.Message;
+                }
             }
         }
 
