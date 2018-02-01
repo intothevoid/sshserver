@@ -1,4 +1,4 @@
-namespace KSSHServer.Algorithms
+namespace KSSHServer
 {
    public interface IAlgorithm
    {
