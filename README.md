@@ -2,12 +2,13 @@
 Implementation of a SSH server in C#
 This should cover basic functionality and encryption but not the advanced features of a full blown SSH server. The idea is to cover atleast one algorithm of each type from the list of required algorithms for a client. The client in this case being Putty supporting SSH-2.0. Based on the idea by TyrenDe.
 
-Algorithms (to be) supported by this server -
-key exchange - diffie-hellman-group14-sha1
-host key algorithm - ssh-rsa
-encryption - 3des-cbc
-mac algorithm - hmac-sha1
-compression - none
+Algorithms (to be) supported by this server -  
+key exchange - diffie-hellman-group14-sha1  
+host key algorithm - ssh-rsa  
+encryption - 3des-cbc  
+mac algorithm - hmac-sha1  
+compression - none  
+
 -----------------------------------------------------------
 Packet Protocol (https://tools.ietf.org/html/rfc4253)
 
