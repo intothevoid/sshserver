@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using KSSHServer.KexAlgorithms;
 
 namespace KSSHServer
 {
@@ -86,6 +87,20 @@ namespace KSSHServer
 
             // Remove all disconnected clients
             _Clients.RemoveAll(c => c.IsConnected() == false);
+        }
+
+        public static IReadOnlyList<Type> SupportedKexAlgorithms { get; private set; } = new List<Type>()
+        {
+            typeof(DiffieHellmanGroup14SHA1)
+        };
+
+        public static IEnumerable<string> GetNames(IReadOnlyList<Type> types)
+        {
+            foreach (Type type in types)
+            {
+                IAlgorithm algo = Activator.CreateInstance(type) as IAlgorithm;
+                yield return type.Name;   
+            }
         }
     }
 }

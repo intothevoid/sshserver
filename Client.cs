@@ -23,6 +23,8 @@ namespace KSSHServer
             _Logger = logger;
 
             // TODO Add supported algorithms to _KexInitServerToClient
+             _KexInitServerToClient.KexAlgorithms.AddRange(Server.GetNames(Server.SupportedKexAlgorithms));
+
             const int socketBufferSize = 2 * Packets.Packet.MaxPacketSize;
             _Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, socketBufferSize);
             _Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, socketBufferSize);
