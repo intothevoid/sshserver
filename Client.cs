@@ -24,6 +24,7 @@ namespace KSSHServer
 
             // TODO Add supported algorithms to _KexInitServerToClient
              _KexInitServerToClient.KexAlgorithms.AddRange(Server.GetNames(Server.SupportedKexAlgorithms));
+             _KexInitServerToClient.ServerHostKeyAlgorithms.AddRange(Server.GetNames(Server.SupportedHostKeyAlgorithms));
 
             const int socketBufferSize = 2 * Packets.Packet.MaxPacketSize;
             _Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, socketBufferSize);

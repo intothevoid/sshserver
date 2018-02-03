@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using KSSHServer.KexAlgorithms;
+using KSSHServer.HostKeyAlgorithms;
 
 namespace KSSHServer
 {
@@ -23,17 +24,48 @@ namespace KSSHServer
         private const int ConectionBacklog = 64;
         private TcpListener _Listener;
         private List<Client> _Clients = new List<Client>();
+        private static Dictionary<string, string> _HostKeys = new Dictionary<string, string>();
 
         public Server()
         {
             _Configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("sshserver.json", optional:false)
+                .AddJsonFile("sshserver.json", optional: false)
                 .Build();
 
             _LoggerFactory = new LoggerFactory();
             _LoggerFactory.AddConsole(_Configuration.GetSection("Logging"));
             _Logger = _LoggerFactory.CreateLogger("SSHServer");
+
+            IConfigurationSection keys = _Configuration.GetSection("keys");
+            foreach (IConfigurationSection key in keys.GetChildren())   
+            {
+               _HostKeys[key.Key] = key.Value; 
+            }
+        }
+
+        public static IReadOnlyList<Type> SupportedHostKeyAlgorithms { get; private set; } = new List<Type>()
+        {
+            typeof(SSHRSA)
+        };
+
+        public static T GetType<T>(IReadOnlyList<Type> types, string selected) where T : class
+        {
+            foreach (Type type in types)
+            {
+                IAlgorithm algo = Activator.CreateInstance(type) as IAlgorithm;
+                if (algo.Name.Equals(selected, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (algo is IHostKeyAlgorithm)
+                    {
+                       ((IHostKeyAlgorithm)algo).ImportKey(_HostKeys[algo.Name]); 
+                    }   
+
+                    return algo as T;
+                }
+            }
+
+            return default(T);
         }
 
         public void Start()
@@ -55,14 +87,14 @@ namespace KSSHServer
             if (_Listener != null)
             {
                 _Logger.LogInformation("Shutting down...");
-                
+
                 _Listener.Stop();
                 _Listener = null;
 
                 // Disconnect each client and clear list
                 _Clients.ForEach(c => c.Disconnect());
                 _Clients.Clear();
-                
+
                 _Logger.LogInformation("Shutting down...");
             }
         }
@@ -99,7 +131,7 @@ namespace KSSHServer
             foreach (Type type in types)
             {
                 IAlgorithm algo = Activator.CreateInstance(type) as IAlgorithm;
-                yield return type.Name;   
+                yield return type.Name;
             }
         }
     }
