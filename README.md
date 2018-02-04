@@ -33,3 +33,9 @@ Changelog
 
 0.4
 - Read key exchange packet (*broken) 
+
+0.5
+- Read key exchange packet working
+
+0.6 
+- Added support for cipher, mac, keyhost and encryption algorithms
