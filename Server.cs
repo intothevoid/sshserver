@@ -121,6 +121,12 @@ namespace KSSHServer
             _Clients.RemoveAll(c => c.IsConnected() == false);
         }
 
+        public static IReadOnlyList<Type> SupportedCiphers { get; private set; } = new List<Type>()
+        {
+            // typeof(Ciphers.NoCipher),
+            typeof(Ciphers.TripleDESCBC)
+        };
+        
         public static IReadOnlyList<Type> SupportedKexAlgorithms { get; private set; } = new List<Type>()
         {
             typeof(DiffieHellmanGroup14SHA1)
