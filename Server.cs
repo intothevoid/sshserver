@@ -121,6 +121,10 @@ namespace KSSHServer
             _Clients.RemoveAll(c => c.IsConnected() == false);
         }
 
+        public static IReadOnlyList<Type> SupportedCompressions { get; private set; } = new List<Type>()
+        {
+            typeof(Compressions.NoCompression)
+        };
         public static IReadOnlyList<Type> SupportedMACAlgorithms { get; private set; } = new List<Type>()
         {
             typeof(MACAlgorithms.HMACSHA1)
