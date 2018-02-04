@@ -1,6 +1,6 @@
 namespace KSSHServer.KexAlgorithms
 {
-   interface IKexAlgorithm : IAlgorithm
+   public interface IKexAlgorithm : IAlgorithm
    {
        byte[] CreateKeyExchange();
        byte[] DecryptKeyExchange(byte[] keyEx);

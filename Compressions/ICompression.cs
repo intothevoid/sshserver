@@ -1,6 +1,6 @@
 namespace KSSHServer.Compressions
 {
-   interface ICompression : IAlgorithm
+   public interface ICompression : IAlgorithm
    {
       byte[] Compress(byte[] data);
       byte[] Decompress(byte[] data); 

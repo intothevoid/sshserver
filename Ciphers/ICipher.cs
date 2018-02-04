@@ -1,6 +1,6 @@
 namespace KSSHServer.Ciphers
 {
-    interface ICipher : IAlgorithm
+    public interface ICipher : IAlgorithm
     {
         uint BlockSize { get; }
         uint KeySize { get; }

@@ -1,6 +1,6 @@
 namespace KSSHServer.MACAlgorithms
 {
-    interface IMACAlgorithm : IAlgorithm
+    public interface IMACAlgorithm : IAlgorithm
     {
         uint KeySize { get; }
         uint DigestLength { get; }
