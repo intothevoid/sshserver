@@ -121,6 +121,10 @@ namespace KSSHServer
             _Clients.RemoveAll(c => c.IsConnected() == false);
         }
 
+        public static IReadOnlyList<Type> SupportedMACAlgorithms { get; private set; } = new List<Type>()
+        {
+            typeof(MACAlgorithms.HMACSHA1)
+        };
         public static IReadOnlyList<Type> SupportedCiphers { get; private set; } = new List<Type>()
         {
             // typeof(Ciphers.NoCipher),
