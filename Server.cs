@@ -35,7 +35,7 @@ namespace KSSHServer
 
             _LoggerFactory = new LoggerFactory();
             _LoggerFactory.AddConsole(_Configuration.GetSection("Logging"));
-            _Logger = _LoggerFactory.CreateLogger("SSHServer");
+            _Logger = _LoggerFactory.CreateLogger("KSSHServer");
 
             IConfigurationSection keys = _Configuration.GetSection("keys");
             foreach (IConfigurationSection key in keys.GetChildren())   

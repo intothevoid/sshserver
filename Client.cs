@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using KSSHServer.Packets;
+using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.Extensions.Logging;
 
 namespace KSSHServer
@@ -16,6 +17,9 @@ namespace KSSHServer
         private bool _ProtocolVersionExchangeComplete = false;
         private string _ProtocolVersionExchange;
         private Packets.KexInit _KexInitServerToClient = new Packets.KexInit();
+        private Packets.KexInit _KexInitClientToServer = null;
+        private ExchangeContext _ActiveExchangeContext = new ExchangeContext();
+        private ExchangeContext _PendingExchangeContext = new ExchangeContext();
 
         public Client(Socket socket, ILogger logger)
         {
@@ -110,8 +114,10 @@ namespace KSSHServer
 
                         while (packet != null)
                         {
-                            // TODO handle specific packets
                             _Logger.LogDebug($"Received Packet: {packet.PacketType}");
+
+                            // Handle specific packet
+                            HandlePacket(packet);
 
                             // Read next packet
                             packet = Packets.Packet.ReadPacket(_Socket);
@@ -161,6 +167,50 @@ namespace KSSHServer
             }
 
             _ProtocolVersionExchange += result;
+        }
+
+        private void HandlePacket(Packet packet)
+        {
+            try
+            {
+                HandleSpecificPacket((dynamic)packet);
+            }
+            catch (RuntimeBinderException)
+            {
+                // TODO: Send an SSH_MSG_UNIMPLEMENTED if we get here
+            }
+        }
+
+        private void HandleSpecificPacket(KexInit packet)
+        {
+            _Logger.LogDebug("Received KexInit packet.");
+
+            if (_PendingExchangeContext == null)
+            {
+                _Logger.LogDebug("Re-exchanging keys!");
+                _PendingExchangeContext = new ExchangeContext();
+                Send(_KexInitServerToClient);
+            }
+
+            _KexInitClientToServer = packet;
+
+            _PendingExchangeContext.KexAlgorithm = packet.PickKexAlgorithm();
+            _PendingExchangeContext.HostKeyAlgorithm = packet.PickHostKeyAlgorithm();
+            _PendingExchangeContext.CipherClientToServer = packet.PickCipherClientToServer();
+            _PendingExchangeContext.CipherServerToClient = packet.PickCipherServerToClient();
+            _PendingExchangeContext.MACAlgorithmClientToServer = packet.PickMACAlgorithmClientToServer();
+            _PendingExchangeContext.MACAlgorithmServerToClient = packet.PickMACAlgorithmServerToClient();
+            _PendingExchangeContext.CompressionClientToServer = packet.PickCompressionAlgorithmClientToServer();
+            _PendingExchangeContext.CompressionServerToClient = packet.PickCompressionAlgorithmServerToClient();
+
+            _Logger.LogDebug($"Selected KexAlgorithm: {_PendingExchangeContext.KexAlgorithm.Name}");
+            _Logger.LogDebug($"Selected HostKeyAlgorithm: {_PendingExchangeContext.HostKeyAlgorithm.Name}");
+            _Logger.LogDebug($"Selected CipherClientToServer: {_PendingExchangeContext.CipherClientToServer.Name}");
+            _Logger.LogDebug($"Selected CipherServerToClient: {_PendingExchangeContext.CipherServerToClient.Name}");
+            _Logger.LogDebug($"Selected MACAlgorithmClientToServer: {_PendingExchangeContext.MACAlgorithmClientToServer.Name}");
+            _Logger.LogDebug($"Selected MACAlgorithmServerToClient: {_PendingExchangeContext.MACAlgorithmServerToClient.Name}");
+            _Logger.LogDebug($"Selected CompressionClientToServer: {_PendingExchangeContext.CompressionClientToServer.Name}");
+            _Logger.LogDebug($"Selected CompressionServerToClient: {_PendingExchangeContext.CompressionServerToClient.Name}");
         }
 
         public void Disconnect()
