@@ -233,7 +233,14 @@ namespace KSSHServer
             }
             catch (RuntimeBinderException)
             {
-                // TODO: Send an SSH_MSG_UNIMPLEMENTED if we get here
+                _Logger.LogWarning($"Unhandled packet type: {packet.PacketType}");
+
+                Unimplemented unimplemented = new Unimplemented()
+                {
+                    RejectedPacketNumber = packet.PacketSequence
+                };
+
+                Send(unimplemented);
             }
         }
 
