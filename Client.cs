@@ -181,6 +181,13 @@ namespace KSSHServer
             }
         }
 
+        private void HandleSpecificPacket(KexDHInit packet)
+        {
+                _Logger.LogDebug("Received KexDHInit");
+
+                // TODO: Implement Key Exchange!
+        }
+
         private void HandleSpecificPacket(KexInit packet)
         {
             _Logger.LogDebug("Received KexInit packet.");

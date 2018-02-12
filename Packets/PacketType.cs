@@ -28,5 +28,7 @@ namespace KSSHServer.Packets
         SSH_MSG_CHANNEL_REQUEST = 98,
         SSH_MSG_CHANNEL_SUCCESS = 99,
         SSH_MSG_CHANNEL_FAILURE = 100,
+        SSH_MSG_KEXDH_INIT = 30,
+        SSH_MSG_KEXDH_REPLY = 31
     }
 }
