@@ -8,6 +8,10 @@ using KSSHServer.KexAlgorithms;
 using KSSHServer.Packets;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.Extensions.Logging;
+using System.Threading;
+using System.Security.Cryptography;
+using System.Linq;
+using KSSHServer.Packets.SSHServer.Packets;
 
 namespace KSSHServer
 {
@@ -22,6 +26,10 @@ namespace KSSHServer
         private ExchangeContext _ActiveExchangeContext = new ExchangeContext();
         private ExchangeContext _PendingExchangeContext = new ExchangeContext();
         private byte[] _SessionId = null;
+        private int _CurrentSentPacketNumber = -1;
+        private int _CurrentReceivedPacketNumber = -1;
+        private long _TotalBytesTransferred = 0;
+        private DateTime _KeyTimeout = DateTime.UtcNow.AddHours(1);
 
         public Client(Socket socket, ILogger logger)
         {
@@ -51,7 +59,40 @@ namespace KSSHServer
 
         private void Send(Packet packet)
         {
-            Send(packet.ToByteArray());
+            packet.PacketSequence = GetSentPacketNumber();
+
+            byte[] payload = _ActiveExchangeContext.CompressionServerToClient.Compress(packet.GetBytes());
+
+            uint blockSize = _ActiveExchangeContext.CipherServerToClient.BlockSize;
+
+            byte paddingLength = (byte)(blockSize - (payload.Length + 5) % blockSize);
+            if (paddingLength < 4)
+                paddingLength += (byte)blockSize;
+
+            byte[] padding = new byte[paddingLength];
+            RandomNumberGenerator.Create().GetBytes(padding);
+
+            uint packetLength = (uint)(payload.Length + paddingLength + 1);
+
+            using (ByteWriter writer = new ByteWriter())
+            {
+                writer.WriteUInt32(packetLength);
+                writer.WriteByte(paddingLength);
+                writer.WriteRawBytes(payload);
+                writer.WriteRawBytes(padding);
+
+                payload = writer.ToByteArray();
+            }
+
+            byte[] encryptedPayload = _ActiveExchangeContext.CipherServerToClient.Encrypt(payload);
+            if (_ActiveExchangeContext.MACAlgorithmServerToClient != null)
+            {
+                byte[] mac = _ActiveExchangeContext.MACAlgorithmServerToClient.ComputeHash(packet.PacketSequence, payload);
+                encryptedPayload = encryptedPayload.Concat(mac).ToArray();
+            }
+
+            Send(encryptedPayload);
+            this.ConsiderReExchange();
         }
 
         private void Send(string message)
@@ -64,6 +105,9 @@ namespace KSSHServer
         {
             if (!IsConnected())
                 return;
+
+            // Increase bytes transferred
+            _TotalBytesTransferred += message.Length;
 
             _Socket.Send(message);
         }
@@ -112,7 +156,7 @@ namespace KSSHServer
                 {
                     try
                     {
-                        Packets.Packet packet = Packets.Packet.ReadPacket(_Socket);
+                        Packets.Packet packet = ReadPacket();
 
                         while (packet != null)
                         {
@@ -122,7 +166,7 @@ namespace KSSHServer
                             HandlePacket(packet);
 
                             // Read next packet
-                            packet = Packets.Packet.ReadPacket(_Socket);
+                            packet = ReadPacket();
                         }
                     }
                     catch (System.Exception ex)
@@ -133,6 +177,16 @@ namespace KSSHServer
                     }
                 }
             }
+        }
+
+        private uint GetSentPacketNumber()
+        {
+            return (uint)Interlocked.Increment(ref _CurrentSentPacketNumber);
+        }
+
+        private uint GetReceivedPacketNumber()
+        {
+            return (uint)Interlocked.Increment(ref _CurrentReceivedPacketNumber);
         }
 
         // Read 1 byte from the socket until \r\n
@@ -386,6 +440,157 @@ namespace KSSHServer
 
             return keyBuffer;
         }
+
+        public Packet ReadPacket()
+        {
+            if (_Socket == null)
+                return null;
+
+            uint blockSize = _ActiveExchangeContext.CipherClientToServer.BlockSize;
+
+            // We must have at least 1 block to read
+            if (_Socket.Available < blockSize)
+                return null;  // Packet not here
+
+            byte[] firstBlock = new byte[blockSize];
+            int bytesRead = _Socket.Receive(firstBlock);
+            if (bytesRead != blockSize)
+                throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_CONNECTION_LOST, "Failed to read from socket.");
+
+            firstBlock = _ActiveExchangeContext.CipherClientToServer.Decrypt(firstBlock);
+
+            uint packetLength = 0;
+            byte paddingLength = 0;
+            using (ByteReader reader = new ByteReader(firstBlock))
+            {
+                // uint32    packet_length
+                // packet_length
+                //     The length of the packet in bytes, not including 'mac' or the
+                //     'packet_length' field itself.
+                packetLength = reader.GetUInt32();
+                if (packetLength > Packet.MaxPacketSize)
+                    throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_PROTOCOL_ERROR, $"Client tried to send a packet bigger than MaxPacketSize ({Packet.MaxPacketSize} bytes): {packetLength} bytes");
+
+                // byte      padding_length
+                // padding_length
+                //    Length of 'random padding' (bytes).
+                paddingLength = reader.GetByte();
+            }
+
+            // byte[n1]  payload; n1 = packet_length - padding_length - 1
+            // payload
+            //    The useful contents of the packet.  If compression has been
+            //    negotiated, this field is compressed.  Initially, compression
+            //    MUST be "none".
+            uint bytesToRead = packetLength - blockSize + 4;
+
+            byte[] restOfPacket = new byte[bytesToRead];
+            bytesRead = _Socket.Receive(restOfPacket);
+            if (bytesRead != bytesToRead)
+                throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_CONNECTION_LOST, "Failed to read from socket.");
+
+            restOfPacket = _ActiveExchangeContext.CipherClientToServer.Decrypt(restOfPacket);
+
+            uint payloadLength = packetLength - paddingLength - 1;
+            byte[] fullPacket = firstBlock.Concat(restOfPacket).ToArray();
+
+            // Track total bytes read
+            _TotalBytesTransferred += fullPacket.Length;
+
+            byte[] payload = fullPacket.Skip(Packet._PacketHeaderSize).Take((int)(packetLength - paddingLength - 1)).ToArray();
+
+            // byte[n2]  random padding; n2 = padding_length
+            // random padding
+            //    Arbitrary-length padding, such that the total length of
+            //    (packet_length || padding_length || payload || random padding)
+            //    is a multiple of the cipher block size or 8, whichever is
+            //    larger.  There MUST be at least four bytes of padding.  The
+            //    padding SHOULD consist of random bytes.  The maximum amount of
+            //    padding is 255 bytes.
+
+            // byte[m]   mac (Message Authentication Code - MAC); m = mac_length
+            // mac
+            //    Message Authentication Code.  If message authentication has
+            //    been negotiated, this field contains the MAC bytes.  Initially,
+            //    the MAC algorithm MUST be "none".
+
+            uint packetNumber = GetReceivedPacketNumber();
+            if (_ActiveExchangeContext.MACAlgorithmClientToServer != null)
+            {
+                byte[] clientMac = new byte[_ActiveExchangeContext.MACAlgorithmClientToServer.DigestLength];
+                bytesRead = _Socket.Receive(clientMac);
+                if (bytesRead != _ActiveExchangeContext.MACAlgorithmClientToServer.DigestLength)
+                    throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_CONNECTION_LOST, "Failed to read from socket.");
+
+                var mac = _ActiveExchangeContext.MACAlgorithmClientToServer.ComputeHash(packetNumber, fullPacket);
+                if (!clientMac.SequenceEqual(mac))
+                {
+                    throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_MAC_ERROR, "MAC from client is invalid");
+                }
+            }
+
+            payload = _ActiveExchangeContext.CompressionClientToServer.Decompress(payload);
+
+            using (ByteReader packetReader = new ByteReader(payload))
+            {
+                PacketType type = (PacketType)packetReader.GetByte();
+
+                if (Packet._PacketTypes.ContainsKey(type))
+                {
+
+                    Packet packet = Activator.CreateInstance(Packet._PacketTypes[type]) as Packet;
+                    packet.Load(packetReader);
+                    packet.PacketSequence = packetNumber;
+                    return packet;
+                }
+
+                _Logger.LogWarning($"Unimplemented packet type: {type}");
+
+                Unimplemented unimplemented = new Unimplemented()
+                {
+                    RejectedPacketNumber = packetNumber
+                };
+
+                Send(unimplemented);
+            }
+
+            return null;
+        }
+
+        private void ConsiderReExchange()
+        {
+            const long OneGB = (1024 * 1024 * 1024);
+            if ((_TotalBytesTransferred > OneGB) || (_KeyTimeout < DateTime.UtcNow))
+            {
+                // Time to get new keys!
+                _TotalBytesTransferred = 0;
+                _KeyTimeout = DateTime.UtcNow.AddHours(1);
+
+                _Logger.LogDebug("Trigger re-exchange from server");
+                _PendingExchangeContext = new ExchangeContext();
+                Send(_KexInitServerToClient);
+            }
+        }
+
+        private void ValidateProtocolVersionExchange()
+        {
+            // https://tools.ietf.org/html/rfc4253#section-4.2
+            //SSH-protoversion-softwareversion SP comments
+
+            string[] pveParts = _ProtocolVersionExchange.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (pveParts.Length == 0)
+                throw new UnauthorizedAccessException("Invalid Protocol Version Exchange was received - No Data");
+
+            string[] versionParts = pveParts[0].Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
+            if (versionParts.Length < 3)
+                throw new UnauthorizedAccessException($"Invalid Protocol Version Exchange was received - Not enough dashes - {pveParts[0]}");
+
+            if (versionParts[1] != "2.0")
+                throw new UnauthorizedAccessException($"Invalid Protocol Version Exchange was received - Unsupported Version - {versionParts[1]}");
+
+            // If we get here, all is well!
+        }
+
 
         public void Disconnect()
         {

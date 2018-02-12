@@ -26,10 +26,10 @@ namespace KSSHServer.Packets
             writer.WriteBytes(Signature);
         }
 
-        protected override void Load(ByteReader reader)
+        public override void Load(ByteReader reader)
         {
             // Client never sends this!
-            throw new InvalidOperationException("SSH Client should never send a SSH_MSG_KEXDH_REPLY message");
+            throw new InvalidOperationException("KSSH Client should never send a SSH_MSG_KEXDH_REPLY message");
         }
     }
 }

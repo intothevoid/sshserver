@@ -10,6 +10,8 @@ namespace KSSHServer.Packets
         SSH_MSG_SERVICE_ACCEPT = 6,
         SSH_MSG_KEXINIT = 20,
         SSH_MSG_NEWKEYS = 21,
+         SSH_MSG_KEXDH_INIT = 30,
+        SSH_MSG_KEXDH_REPLY = 31,
         SSH_MSG_USERAUTH_REQUEST = 50,
         SSH_MSG_USERAUTH_FAILURE = 51,
         SSH_MSG_USERAUTH_SUCCESS = 52,
@@ -27,8 +29,6 @@ namespace KSSHServer.Packets
         SSH_MSG_CHANNEL_CLOSE = 97,
         SSH_MSG_CHANNEL_REQUEST = 98,
         SSH_MSG_CHANNEL_SUCCESS = 99,
-        SSH_MSG_CHANNEL_FAILURE = 100,
-        SSH_MSG_KEXDH_INIT = 30,
-        SSH_MSG_KEXDH_REPLY = 31
-    }
+        SSH_MSG_CHANNEL_FAILURE = 100
+   }
 }

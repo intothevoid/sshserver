@@ -33,18 +33,25 @@ namespace KSSHServer.Ciphers
         {
             get
             {
-               return "3des-cbc"; 
+                return "3des-cbc";
             }
+        }
+
+        public TripleDESCBC()
+        {
+            _3DES.KeySize = 192;
+            _3DES.Padding = PaddingMode.None;
+            _3DES.Mode = CipherMode.CBC;
         }
 
         public byte[] Decrypt(byte[] data)
         {
-           return PerformTransform(_Decryptor, data);
+            return PerformTransform(_Decryptor, data);
         }
 
         public byte[] Encrypt(byte[] data)
         {
-           return PerformTransform(_Encryptor, data);
+            return PerformTransform(_Encryptor, data);
         }
 
         private byte[] PerformTransform(ICryptoTransform transform, byte[] data)
@@ -52,27 +59,16 @@ namespace KSSHServer.Ciphers
             if (transform == null)
                 throw new InvalidOperationException("SetKey must be called before attempting to encrypt or decrypt data.");
 
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                using (CryptoStream cryptoStream = new CryptoStream(memoryStream, transform, CryptoStreamMode.Write))
-                {
-                   cryptoStream.Write(data, 0, data.Length);
-                   cryptoStream.FlushFinalBlock();
-                   return memoryStream.ToArray(); 
-                }
-                
-            }
-                
-            
+            var output = new byte[data.Length];
+            transform.TransformBlock(data, 0, data.Length, output, 0);
+
+            return output;
         }
 
         public void SetKey(byte[] key, byte[] iv)
         {
-            _3DES.KeySize = 192;
             _3DES.Key = key;
             _3DES.IV = iv;
-            _3DES.Padding = PaddingMode.None;
-            _3DES.Mode = CipherMode.CBC;
 
             _Decryptor = _3DES.CreateDecryptor(key, iv);
             _Encryptor = _3DES.CreateEncryptor(key, iv);

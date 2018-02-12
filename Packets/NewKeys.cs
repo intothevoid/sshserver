@@ -15,7 +15,7 @@ namespace KSSHServer.Packets
             // No data, nothing to write
         }
 
-        protected override void Load(ByteReader reader)
+        public override void Load(ByteReader reader)
         {
             // No data, nothing to load
         }
