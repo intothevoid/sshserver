@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using KSSHServer.Packets;
 
 namespace KSSHServer.Ciphers
 {
@@ -57,7 +58,7 @@ namespace KSSHServer.Ciphers
         private byte[] PerformTransform(ICryptoTransform transform, byte[] data)
         {
             if (transform == null)
-                throw new InvalidOperationException("SetKey must be called before attempting to encrypt or decrypt data.");
+                throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "SetKey must be called before attempting to encrypt or decrypt data.");
 
             var output = new byte[data.Length];
             transform.TransformBlock(data, 0, data.Length, output, 0);

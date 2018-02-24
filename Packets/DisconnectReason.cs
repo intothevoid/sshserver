@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace KSSHServer.Packets
@@ -23,5 +24,35 @@ namespace KSSHServer.Packets
         SSH_DISCONNECT_AUTH_CANCELLED_BY_USER = 13,
         SSH_DISCONNECT_NO_MORE_AUTH_METHODS_AVAILABLE = 14,
         SSH_DISCONNECT_ILLEGAL_USER_NAME = 15,
+    }
+
+    public class Disconnect : Packet
+    {
+        public override PacketType PacketType
+        {
+            get
+            {
+                return PacketType.SSH_MSG_DISCONNECT;
+            }
+        }
+
+        public DisconnectReason Reason { get; set; }
+        public string Description { get; set; }
+        public string Language { get; set; } = "en";
+
+        public override void Load(ByteReader reader)
+        {
+            Reason = (DisconnectReason)reader.GetUInt32();
+            Description = reader.GetString(Encoding.UTF8);
+            if (!reader.IsEOF)
+                Language = reader.GetString();
+        }
+
+        protected override void InternalGetBytes(ByteWriter writer)
+        {
+            writer.WriteUInt32((uint)Reason);
+            writer.WriteString(Description, Encoding.UTF8);
+            writer.WriteString(Language);
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace KSSHServer.Packets
         public override void Load(ByteReader reader)
         {
             // Client never sends this!
-            throw new InvalidOperationException("KSSH Client should never send a SSH_MSG_KEXDH_REPLY message");
+            throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "KSSH Client should never send a SSH_MSG_KEXDH_REPLY message");
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using KSSHServer.KexAlgorithms;
 using KSSHServer.HostKeyAlgorithms;
+using KSSHServer.Packets;
 
 namespace KSSHServer
 {
@@ -92,7 +93,7 @@ namespace KSSHServer
                 _Listener = null;
 
                 // Disconnect each client and clear list
-                _Clients.ForEach(c => c.Disconnect());
+                _Clients.ForEach(c => c.Disconnect(DisconnectReason.SSH_DISCONNECT_BY_APPLICATION, "The server is getting shutdown."));
                 _Clients.Clear();
 
                 _Logger.LogInformation("Shutting down...");

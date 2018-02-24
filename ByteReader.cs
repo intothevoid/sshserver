@@ -71,7 +71,7 @@ namespace KSSHServer
             return GetString(Encoding.ASCII);
         }
 
-        private string GetString(Encoding encoding)
+        public string GetString(Encoding encoding)
         {
             int length = (int)GetUInt32();
 

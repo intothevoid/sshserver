@@ -85,7 +85,7 @@ namespace KSSHServer.Packets
 
             // If no algorithm satisfying all these conditions can be found, the
             // connection fails, and both sides MUST disconnect.
-            throw new NotSupportedException("Could not find a shared Kex Algorithm");
+            throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "Could not find a shared Kex Algorithm");
         }
 
 
@@ -116,7 +116,7 @@ namespace KSSHServer.Packets
 
             // If no algorithm satisfying all these conditions can be found, the
             // connection fails, and both sides MUST disconnect.
-            throw new NotSupportedException("Could not find a shared Client-To-Server Cipher Algorithm");
+            throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "Could not find a shared Client-To-Server Cipher Algorithm");
         }
 
         public ICipher PickCipherServerToClient()
@@ -148,7 +148,7 @@ namespace KSSHServer.Packets
 
             // If no algorithm satisfying all these conditions can be found, the
             // connection fails, and both sides MUST disconnect.
-            throw new NotSupportedException("Could not find a shared Client-To-Server MAC Algorithm");
+            throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "Could not find a shared Client-To-Server MAC Algorithm");
         }
 
         public IMACAlgorithm PickMACAlgorithmServerToClient()
@@ -164,7 +164,7 @@ namespace KSSHServer.Packets
 
             // If no algorithm satisfying all these conditions can be found, the
             // connection fails, and both sides MUST disconnect.
-            throw new NotSupportedException("Could not find a shared Server-To-Client MAC Algorithm");
+            throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "Could not find a shared Server-To-Client MAC Algorithm");
         }
 
         public ICompression PickCompressionAlgorithmClientToServer()
@@ -180,7 +180,7 @@ namespace KSSHServer.Packets
 
             // If no algorithm satisfying all these conditions can be found, the
             // connection fails, and both sides MUST disconnect.
-            throw new NotSupportedException("Could not find a shared Client-To-Server Compresion Algorithm");
+            throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "Could not find a shared Client-To-Server Compresion Algorithm");
         }
 
         public ICompression PickCompressionAlgorithmServerToClient()
@@ -196,7 +196,7 @@ namespace KSSHServer.Packets
 
             // If no algorithm satisfying all these conditions can be found, the
             // connection fails, and both sides MUST disconnect.
-            throw new NotSupportedException("Could not find a shared Server-To-Client Compresion Algorithm");
+            throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_KEY_EXCHANGE_FAILED, "Could not find a shared Server-To-Client Compresion Algorithm");
         }
     }
 }

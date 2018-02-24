@@ -130,7 +130,7 @@ namespace KSSHServer
 
                 if (read < 1)
                 {
-                    Disconnect();
+                    Disconnect(DisconnectReason.SSH_DISCONNECT_CONNECTION_LOST, "The client disconnected.");
                     return;
                 }
 
@@ -143,11 +143,12 @@ namespace KSSHServer
                         if (_ProtocolVersionExchangeComplete)
                         {
                             _Logger.LogDebug($"Received ProtocolVersionExchange:{_ProtocolVersionExchange}");
+                            ValidateProtocolVersionExchange();
                         }
                     }
                     catch (System.Exception)
                     {
-                        Disconnect();
+                        Disconnect(DisconnectReason.SSH_DISCONNECT_PROTOCOL_VERSION_NOT_SUPPORTED, "Failed to get the protocol version exchange.");
                         return;
                     }
                 }
@@ -168,11 +169,13 @@ namespace KSSHServer
                             // Read next packet
                             packet = ReadPacket();
                         }
+
+                        ConsiderReExchange();
                     }
-                    catch (System.Exception ex)
+                    catch (KSSHServerException ex)
                     {
                         _Logger.LogError(ex.Message);
-                        Disconnect();
+                        Disconnect(ex.Reason, ex.Message);
                         return;
                     }
                 }
@@ -250,7 +253,7 @@ namespace KSSHServer
 
             if ((_PendingExchangeContext == null) || (_PendingExchangeContext.KexAlgorithm == null))
             {
-                throw new InvalidOperationException("Server did not receive SSH_MSG_KEX_INIT as expected.");
+                throw new KSSHServerException(DisconnectReason.SSH_DISCONNECT_PROTOCOL_ERROR, "Server did not receive SSH_MSG_KEX_INIT as expected.");
             }
 
             // 1. C generates a random number x (1 &lt x &lt q) and computes e = g ^ x mod p.  C sends e to S.
@@ -375,6 +378,11 @@ namespace KSSHServer
 
             _ActiveExchangeContext = _PendingExchangeContext;
             _PendingExchangeContext = null;
+
+
+            // Reset re-exchange values
+            _TotalBytesTransferred = 0;
+            _KeyTimeout = DateTime.UtcNow.AddHours(1);
         }
 
         private byte[] ComputeExchangeHash(IKexAlgorithm kexAlgorithm, byte[] hostKeyAndCerts, byte[] clientExchangeValue, byte[] serverExchangeValue, byte[] sharedSecret)
@@ -599,22 +607,33 @@ namespace KSSHServer
         }
 
 
-        public void Disconnect()
+        public void Disconnect(DisconnectReason reason, string message)
         {
-            _Logger.LogInformation("Client disconnected");
-
+            _Logger.LogDebug($"Disconnected - {reason} - {message}");
             if (_Socket != null)
             {
+                if (reason != DisconnectReason.None)
+                {
+                    try
+                    {
+                        Disconnect disconnect = new Disconnect()
+                        {
+                            Reason = reason,
+                            Description = message
+                        };
+                        Send(disconnect);
+                    }
+                    catch (Exception) { }
+                }
+
                 try
                 {
                     _Socket.Shutdown(SocketShutdown.Both);
                 }
-
-                catch (System.Exception) { }
+                catch (Exception) { }
 
                 _Socket = null;
             }
         }
-
     };
 }
